@@ -7,6 +7,8 @@ export const CONFIG = {
   anschrift: "Erich-Kästner-Weg 33, 90513 Zirndorf",
   postanschrift: "OpenZirndorf i. G., Erich-Kästner-Weg 33, 90513 Zirndorf",
   email: "vorstand@openzirndorf.de",
+  // Adresse, an die die fertige Beitrittserklärung (als PDF-Anhang) geschickt wird.
+  antragEmail: "mitgliedsantrag@openzirndorf.de",
 
   // Gläubiger-Identifikationsnummer für SEPA-Lastschriften.
   glaeubigerId: "DE68ZZZ00002940464",
@@ -16,14 +18,6 @@ export const CONFIG = {
 
   satzungUrl: "https://openzirndorf.de/static/docs/satzung.pdf",
   beitragsordnungUrl: "https://openzirndorf.de/static/docs/beitragsordnung.pdf",
-
-  // Nextcloud-Forms-Link, über den Antragstellende Name/E-Mail eingeben und
-  // ihr unterschriebenes PDF anhängen. Das Passwort ist bewusst zusammen mit
-  // dem Link öffentlich sichtbar (kein Backend, das es geheim halten könnte)
-  // – es filtert nur blind das offene Netz absuchende Bots heraus, keine
-  // gezielte Einsicht. Leer lassen, falls das Formular kein Passwort hat.
-  uploadUrl: "https://cloud.openzirndorf.de/apps/forms/s/kdk38HXHmWBxi77T6FyYY87f",
-  uploadPasswort: "",
 
   faelligkeitText: "1. Februar",
   // Monat, auf den der jährliche Beitragseinzug fällt (1 = Januar … 12 = Dezember).

@@ -248,7 +248,7 @@ export function datenschutzAbsaetze() {
     {
       titel: "Empfänger",
       text:
-        "Kontodaten werden ausschließlich zur Durchführung des Lastschriftverfahrens an unser Kreditinstitut übermittelt. Für die Ablage der Unterlagen setzen wir einen Auftragsverarbeiter mit Vertrag nach Art. 28 DSGVO ein. Eine weitergehende Weitergabe findet nicht statt."
+        "Kontodaten werden ausschließlich zur Durchführung des Lastschriftverfahrens an unser Kreditinstitut übermittelt. Eingereichte Beitrittserklärungen und SEPA-Mandate legen wir auf einer eigenen Hetzner Storage Box ab (Auftragsverarbeiter mit Vertrag nach Art. 28 DSGVO). Eine weitergehende Weitergabe findet nicht statt."
     },
     {
       titel: "Speicherdauer",

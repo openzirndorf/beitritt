@@ -213,11 +213,23 @@ function pruefeFeld(id) {
 
 function aktualisiereMinderjaehrigkeit() {
   const geburtsdatum = wert("geburtsdatum");
+  if (!validate.parseDatumInput(geburtsdatum)) {
+    state.minderjaehrig = false;
+    document.getElementById("minderjaehrig-hinweis").hidden = true;
+    document.getElementById("vertreter-name").required = false;
+    clearFehler("vertreter-name");
+    return;
+  }
+
+  // Vor Eingabe des Eintrittsdatums (Pflichtfeld erst in Schritt 2 weiter
+  // unten) schon gegen heute prüfen, damit der Hinweis direkt beim
+  // Geburtsdatum erscheint statt erst nach dem Eintrittsdatum. Da das
+  // Eintrittsdatum nie in der Vergangenheit liegen darf, ist "heute" hier
+  // die konservative Annahme – sie zeigt Minderjährigkeit nie zu spät an,
+  // höchstens kurz zu früh, falls der 18. Geburtstag dazwischen liegt.
   const eintrittsdatum = wert("eintrittsdatum");
-  const istMj =
-    validate.parseDatumInput(geburtsdatum) && validate.parseDatumInput(eintrittsdatum)
-      ? validate.istMinderjaehrig(geburtsdatum, eintrittsdatum)
-      : false;
+  const stichtag = validate.parseDatumInput(eintrittsdatum) ? eintrittsdatum : validate.heutigesDatumIso();
+  const istMj = validate.istMinderjaehrig(geburtsdatum, stichtag);
 
   state.minderjaehrig = istMj;
   document.getElementById("minderjaehrig-hinweis").hidden = !istMj;
@@ -566,28 +578,6 @@ function zeigeErgebnis(bytes, dateiname, daten) {
         ? "Ausdrucken und handschriftlich unterschreiben – von Mitglied und gesetzlicher Vertretung."
         : "Ausdrucken und handschriftlich unterschreiben.";
 
-  document.getElementById("ergebnis-email-warnung").hidden = daten.zahlung.art !== "lastschrift";
-
-  const uploadLink = document.getElementById("upload-link");
-  const uploadFehlt = document.getElementById("upload-link-fehlt");
-  const uploadPasswortWrap = document.getElementById("upload-link-passwort-wrap");
-  if (CONFIG.uploadUrl) {
-    uploadLink.href = CONFIG.uploadUrl;
-    uploadLink.textContent = CONFIG.uploadUrl;
-    uploadLink.hidden = false;
-    uploadFehlt.hidden = true;
-    if (CONFIG.uploadPasswort) {
-      document.getElementById("upload-link-passwort").textContent = CONFIG.uploadPasswort;
-      uploadPasswortWrap.hidden = false;
-    } else {
-      uploadPasswortWrap.hidden = true;
-    }
-  } else {
-    uploadLink.hidden = true;
-    uploadFehlt.hidden = false;
-    uploadPasswortWrap.hidden = true;
-  }
-
   zeigeSchritt("ergebnis");
 }
 
@@ -676,6 +666,9 @@ function init() {
 
   document.getElementById("eintrittsdatum").min = validate.heutigesDatumIso();
   document.getElementById("postanschrift").textContent = CONFIG.postanschrift;
+  const emailLink = document.getElementById("antrag-email-link");
+  emailLink.href = `mailto:${CONFIG.antragEmail}`;
+  emailLink.textContent = CONFIG.antragEmail;
   befuelleDatenschutzInhalt();
 
   Object.keys(FELD_VALIDIERUNG).forEach((id) => {
