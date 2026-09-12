@@ -195,6 +195,17 @@ label {
   color: var(--grau);
 }
 
+.pflicht-stern {
+  color: var(--fehler);
+  margin-left: 0.15rem;
+}
+
+.pflicht-legende {
+  font-size: 0.85rem;
+  color: var(--grau);
+  margin: 0 0 1.1rem;
+}
+
 input[type="text"],
 input[type="email"],
 input[type="tel"],

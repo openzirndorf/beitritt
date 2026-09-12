@@ -334,10 +334,11 @@ function aufZahlungsartAuswahlReagieren() {
 
   if (ueberweisung) {
     const text = document.getElementById("ueberweisung-text");
+    const verwendungszweck = `Aufnahme ${wert("vorname")} ${wert("nachname")}`.trim();
     if (CONFIG.vereinsIban) {
-      text.textContent = `Bitte überweise den Beitrag zum Fälligkeitstag (${CONFIG.faelligkeitText}) ohne gesonderte Aufforderung an: ${CONFIG.vereinsname}, IBAN ${validate.formatIban(CONFIG.vereinsIban)}.`;
+      text.textContent = `Bitte überweise den Beitrag zum Fälligkeitstag (${CONFIG.faelligkeitText}) ohne gesonderte Aufforderung an: ${CONFIG.vereinsname}, IBAN ${validate.formatIban(CONFIG.vereinsIban)}. Verwendungszweck: „${verwendungszweck}“ – ohne deinen Namen können wir die Zahlung nicht zuordnen.`;
     } else {
-      text.textContent = `Die Vereins-IBAN wird hier ergänzt, sobald das Vereinskonto eingerichtet ist. Wir informieren dich rechtzeitig vor der ersten Fälligkeit (${CONFIG.faelligkeitText}).`;
+      text.textContent = `Die Vereins-IBAN wird hier ergänzt, sobald das Vereinskonto eingerichtet ist. Wir informieren dich rechtzeitig vor der ersten Fälligkeit (${CONFIG.faelligkeitText}). Verwendungszweck dann bitte: „${verwendungszweck}“.`;
     }
   }
 
@@ -556,6 +557,44 @@ async function pdfErzeugenUndAnzeigen() {
   }
 }
 
+/**
+ * Web-Share-API mit Datei-Unterstützung (Level 2): Auf Geräten, die es
+ * anbieten (v. a. Smartphones), übergibt das direkt an die App-Auswahl des
+ * Betriebssystems – inklusive PDF als fertigem Anhang, kein manuelles
+ * Herunterladen und wieder-Anhängen nötig. Der Empfänger lässt sich darüber
+ * nicht vorbelegen (die Web-Share-API kennt kein Empfängerfeld), deshalb
+ * bleibt die Adresse zusätzlich im Hinweistext daneben stehen. Auf Desktop-
+ * Browsern i. d. R. nicht verfügbar – dort bleibt es beim Download+Anhängen.
+ */
+function teilenVorbereiten(bytes, dateiname) {
+  const button = document.getElementById("teilen-button");
+  const hinweis = document.getElementById("teilen-hinweis");
+
+  let datei = null;
+  try {
+    datei = new File([bytes], dateiname, { type: "application/pdf" });
+  } catch {
+    datei = null;
+  }
+
+  const kannTeilen = !!(datei && navigator.canShare && navigator.canShare({ files: [datei] }));
+  button.hidden = !kannTeilen;
+  hinweis.hidden = !kannTeilen;
+  if (!kannTeilen) return;
+
+  button.onclick = async () => {
+    try {
+      await navigator.share({
+        files: [datei],
+        title: "Beitrittserklärung OpenZirndorf",
+        text: `Beitrittserklärung – bitte an ${CONFIG.antragEmail} senden.`
+      });
+    } catch (fehler) {
+      if (fehler && fehler.name !== "AbortError") console.error(fehler);
+    }
+  };
+}
+
 function zeigeErgebnis(bytes, dateiname, daten) {
   if (state.pdfUrl) URL.revokeObjectURL(state.pdfUrl);
   const blob = new Blob([bytes], { type: "application/pdf" });
@@ -568,6 +607,8 @@ function zeigeErgebnis(bytes, dateiname, daten) {
 
   const oeffnenLink = document.getElementById("pdf-oeffnen-link");
   oeffnenLink.href = url;
+
+  teilenVorbereiten(bytes, dateiname);
 
   document.getElementById("ergebnis-status").textContent = `Deine Beitrittserklärung wurde erstellt: ${dateiname}`;
 
@@ -669,6 +710,7 @@ function init() {
   const emailLink = document.getElementById("antrag-email-link");
   emailLink.href = `mailto:${CONFIG.antragEmail}`;
   emailLink.textContent = CONFIG.antragEmail;
+  document.getElementById("teilen-hinweis-email").textContent = CONFIG.antragEmail;
   befuelleDatenschutzInhalt();
 
   Object.keys(FELD_VALIDIERUNG).forEach((id) => {

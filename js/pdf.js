@@ -248,7 +248,7 @@ export function datenschutzAbsaetze() {
     {
       titel: "Empfänger",
       text:
-        "Kontodaten werden ausschließlich zur Durchführung des Lastschriftverfahrens an unser Kreditinstitut übermittelt. Eingereichte Beitrittserklärungen und SEPA-Mandate legen wir auf einer eigenen Hetzner Storage Box ab (Auftragsverarbeiter mit Vertrag nach Art. 28 DSGVO). Eine weitergehende Weitergabe findet nicht statt."
+        "Kontodaten werden ausschließlich zur Durchführung des Lastschriftverfahrens an unser Kreditinstitut übermittelt. Eingereichte Beitrittserklärungen und SEPA-Mandate legen wir in unserer eigenen Datenverwaltung ab, für die wir auf den Anbieter Hetzner zurückgreifen (Auftragsverarbeiter mit Vertrag nach Art. 28 DSGVO). Eine weitergehende Weitergabe findet nicht statt."
     },
     {
       titel: "Speicherdauer",
@@ -297,7 +297,7 @@ async function seiteEins(pdfDoc, schriften, logoImage, daten) {
     s.absatz("SEPA-Lastschrift. Das zugehörige Mandat befindet sich auf der nächsten Seite dieser Erklärung.");
   } else {
     s.absatz(
-      `Überweisung. Der Beitrag ist zum Fälligkeitstag (${CONFIG.faelligkeitText}) ohne gesonderte Aufforderung auf das Konto des Vereins zu entrichten.`
+      `Überweisung. Der Beitrag ist zum Fälligkeitstag (${CONFIG.faelligkeitText}) ohne gesonderte Aufforderung auf das Konto des Vereins zu entrichten. Verwendungszweck: „Aufnahme ${daten.person.vorname} ${daten.person.nachname}“.`
     );
   }
   s.abstand(6);
