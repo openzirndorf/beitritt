@@ -65,7 +65,11 @@
         </div>
 
         <div class="feldgruppe">
-          <label for="geburtsdatum">Geburtsdatum <span class="pflicht-stern" aria-hidden="true">*</span></label>
+          <label for="geburtsdatum">
+            <span id="geburtsdatum-label-text">Geburtsdatum</span>
+            <span id="geburtsdatum-pflicht-stern" class="pflicht-stern" aria-hidden="true">*</span>
+            <span id="geburtsdatum-optional-hinweis" class="optional-hinweis" hidden>(optional – ggf. der Ansprechperson im Verein/Unternehmen)</span>
+          </label>
           <input id="geburtsdatum" type="date" autocomplete="bday" aria-describedby="fehler-geburtsdatum" required />
           <p id="fehler-geburtsdatum" class="feld-fehler" aria-live="polite" hidden></p>
         </div>

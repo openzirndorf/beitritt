@@ -133,6 +133,20 @@ function aufMitgliedschaftAuswahlReagieren() {
   document.getElementById("organisation").required = brauchtOrganisation;
   if (!brauchtOrganisation) clearFehler("organisation");
 
+  // Ein Verein oder Unternehmen selbst hat kein Geburtsdatum – nur die
+  // Person, die hier als Ansprechpartner:in unterschreibt, ggf. schon, ist
+  // dafür aber nicht verpflichtet (und wird auch nicht auf Minderjährigkeit
+  // geprüft, siehe aktualisiereMinderjaehrigkeit()).
+  const geburtsdatumInput = document.getElementById("geburtsdatum");
+  geburtsdatumInput.required = !brauchtOrganisation;
+  document.getElementById("geburtsdatum-pflicht-stern").hidden = brauchtOrganisation;
+  document.getElementById("geburtsdatum-optional-hinweis").hidden = !brauchtOrganisation;
+  document.getElementById("geburtsdatum-label-text").textContent = brauchtOrganisation
+    ? "Geburtsdatum der Ansprechperson"
+    : "Geburtsdatum";
+  if (brauchtOrganisation) clearFehler("geburtsdatum");
+  aktualisiereMinderjaehrigkeit();
+
   clearFehler("mitgliedschaft");
   aktualisiereAnteiligenBeitrag();
 }
@@ -174,7 +188,11 @@ const FELD_VALIDIERUNG = {
   vorname: { pruefen: () => validate.validateNichtLeer(wert("vorname")), nachricht: "Bitte gib deinen Vornamen ein." },
   nachname: { pruefen: () => validate.validateNichtLeer(wert("nachname")), nachricht: "Bitte gib deinen Nachnamen ein." },
   geburtsdatum: {
-    pruefen: () => validate.validateGeburtsdatum(wert("geburtsdatum")),
+    pruefen: () => {
+      const eingabe = wert("geburtsdatum");
+      if (!eingabe && !document.getElementById("geburtsdatum").required) return true;
+      return validate.validateGeburtsdatum(eingabe);
+    },
     nachricht: "Bitte gib ein gültiges Geburtsdatum in der Vergangenheit ein."
   },
   strasse: { pruefen: () => validate.validateNichtLeer(wert("strasse")), nachricht: "Bitte gib Straße und Hausnummer ein." },
@@ -212,6 +230,18 @@ function pruefeFeld(id) {
 }
 
 function aktualisiereMinderjaehrigkeit() {
+  const ausgewaehlt = ausgewaehlteMitgliedschaftsart();
+  if (ausgewaehlt && ausgewaehlt.brauchtOrganisation) {
+    // Mitglied ist der Verein/das Unternehmen, nicht die unterschreibende
+    // Person – die Minderjährigen-/Vertretungslogik nach § 10 Abs. 2 der
+    // Satzung betrifft nur natürliche Personen als Mitglied.
+    state.minderjaehrig = false;
+    document.getElementById("minderjaehrig-hinweis").hidden = true;
+    document.getElementById("vertreter-name").required = false;
+    clearFehler("vertreter-name");
+    return;
+  }
+
   const geburtsdatum = wert("geburtsdatum");
   if (!validate.parseDatumInput(geburtsdatum)) {
     state.minderjaehrig = false;
@@ -317,6 +347,20 @@ function aufIbanPruefenReagieren() {
   }
 }
 
+/**
+ * Verwendungszweck für die Überweisung: Mitglied ist bei einer Förder-
+ * mitgliedschaft für Vereine/Unternehmen die Organisation selbst, nicht die
+ * unterschreibende Ansprechperson – die muss also im Verwendungszweck
+ * stehen, sonst lässt sich die Zahlung auf dem Vereinskonto nicht zuordnen.
+ */
+function baueVerwendungszweck() {
+  const ausgewaehlt = ausgewaehlteMitgliedschaftsart();
+  if (ausgewaehlt && ausgewaehlt.brauchtOrganisation) {
+    return `Aufnahme ${wert("organisation")}`.trim();
+  }
+  return `Aufnahme ${wert("vorname")} ${wert("nachname")}`.trim();
+}
+
 function aufZahlungsartAuswahlReagieren() {
   const lastschrift = document.getElementById("zahlungsart-lastschrift").checked;
   const ueberweisung = document.getElementById("zahlungsart-ueberweisung").checked;
@@ -334,11 +378,11 @@ function aufZahlungsartAuswahlReagieren() {
 
   if (ueberweisung) {
     const text = document.getElementById("ueberweisung-text");
-    const verwendungszweck = `Aufnahme ${wert("vorname")} ${wert("nachname")}`.trim();
+    const verwendungszweck = baueVerwendungszweck();
     if (CONFIG.vereinsIban) {
-      text.textContent = `Bitte überweise den Beitrag zum Fälligkeitstag (${CONFIG.faelligkeitText}) ohne gesonderte Aufforderung an: ${CONFIG.vereinsname}, IBAN ${validate.formatIban(CONFIG.vereinsIban)}. Verwendungszweck: „${verwendungszweck}“ – ohne deinen Namen können wir die Zahlung nicht zuordnen.`;
+      text.textContent = `Bitte noch nicht überweisen: Wir müssen deinen Beitritt erst prüfen und die Mitgliedschaft bestätigen. Überweise den Beitrag danach – spätestens zum Fälligkeitstag (${CONFIG.faelligkeitText}) – an: ${CONFIG.vereinsname}, IBAN ${validate.formatIban(CONFIG.vereinsIban)}. Verwendungszweck: „${verwendungszweck}“ – ohne diese Angabe können wir die Zahlung nicht zuordnen.`;
     } else {
-      text.textContent = `Die Vereins-IBAN wird hier ergänzt, sobald das Vereinskonto eingerichtet ist. Wir informieren dich rechtzeitig vor der ersten Fälligkeit (${CONFIG.faelligkeitText}). Verwendungszweck dann bitte: „${verwendungszweck}“.`;
+      text.textContent = `Die Vereins-IBAN wird hier ergänzt, sobald das Vereinskonto eingerichtet ist. Bitte noch nichts überweisen: Wir informieren dich nach Bestätigung deiner Mitgliedschaft rechtzeitig vor der ersten Fälligkeit (${CONFIG.faelligkeitText}). Verwendungszweck dann bitte: „${verwendungszweck}“.`;
     }
   }
 
@@ -537,7 +581,7 @@ async function pdfErzeugenUndAnzeigen() {
             bic: wert("bic"),
             kreditinstitut: wert("kreditinstitut")
           }
-        : { art: "ueberweisung" },
+        : { art: "ueberweisung", verwendungszweck: baueVerwendungszweck() },
       unterschrift: {
         modus: state.unterschriftModus,
         dataUrl: state.unterschriftModus === "digital" && signaturPad ? signaturPad.toDataUrl() : null

@@ -272,7 +272,10 @@ async function seiteEins(pdfDoc, schriften, logoImage, daten) {
 
   s.blockTitel("Angaben zur Person");
   s.feld("Name:", `${daten.person.vorname} ${daten.person.nachname}`);
-  s.feld("Geburtsdatum:", formatDatumDe(daten.person.geburtsdatum));
+  s.feld(
+    daten.organisation ? "Geburtsdatum Ansprechperson:" : "Geburtsdatum:",
+    formatDatumDe(daten.person.geburtsdatum)
+  );
   s.feld("Anschrift:", `${daten.person.strasse}, ${daten.person.plz} ${daten.person.ort}`);
   s.feld("E-Mail:", daten.person.email);
   if (daten.person.telefon) s.feld("Telefon:", daten.person.telefon);
@@ -297,7 +300,7 @@ async function seiteEins(pdfDoc, schriften, logoImage, daten) {
     s.absatz("SEPA-Lastschrift. Das zugehörige Mandat befindet sich auf der nächsten Seite dieser Erklärung.");
   } else {
     s.absatz(
-      `Überweisung. Der Beitrag ist zum Fälligkeitstag (${CONFIG.faelligkeitText}) ohne gesonderte Aufforderung auf das Konto des Vereins zu entrichten. Verwendungszweck: „Aufnahme ${daten.person.vorname} ${daten.person.nachname}“.`
+      `Überweisung. Bitte noch nicht überweisen: Der Beitrag wird erst fällig, nachdem der Verein die Mitgliedschaft bestätigt hat – spätestens zum Fälligkeitstag (${CONFIG.faelligkeitText}) dann ohne weitere Aufforderung auf das Konto des Vereins. Verwendungszweck: „${daten.zahlung.verwendungszweck}“.`
     );
   }
   s.abstand(6);
